@@ -1,0 +1,1 @@
+gomobile bind -target=android -androidapi 21 -o ../app/libs/mysingbox.aar .
