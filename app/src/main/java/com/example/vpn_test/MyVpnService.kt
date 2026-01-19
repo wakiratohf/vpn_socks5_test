@@ -50,7 +50,7 @@ class MyVpnService : VpnService() {
         // --- PHẦN 1: Cấu hình Android Interface (TUN) ---
         val builder = Builder()
             .setSession("MyVPN")
-            .setMtu(1280)                     // Theo profile của bạn
+            .setMtu(1500)                     // Theo profile của bạn
             .addAddress("10.0.0.2", 32)       // Local Address của bạn
             .addDnsServer("8.8.8.8")          // DNS Google (hoặc dùng 1.1.1.1)
             .addRoute("0.0.0.0", 0)           // Route toàn bộ traffic qua VPN
@@ -88,9 +88,9 @@ class MyVpnService : VpnService() {
         try {
             // QUAN TRỌNG: Dùng detachFd() vì chúng ta dùng Custom TUN bên Go
             val fd = pfd!!.detachFd()
-
+            val socks5Proxy = "127.0.0.1:1080"
             // Gọi hàm Go
-            goTunnel = Mysingboxlib.startVPN(fd.toLong(), config, 1)
+            goTunnel = Mysingboxlib.startVPN(fd.toLong(), config, socks5Proxy, "", "", 2)
 
             Log.i("VPN", "WireGuard Go Connected Successfully!")
         } catch (e: Exception) {

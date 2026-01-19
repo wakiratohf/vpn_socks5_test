@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Bundle
 import android.widget.Button
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
@@ -16,12 +17,50 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Tạo giao diện đơn giản bằng code (không cần file xml layout)
-        val button = Button(this).apply {
-            text = "Kết nối VPN"
-            setOnClickListener { prepareVpn() }
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+
+            val margin = (16 * resources.displayMetrics.density).toInt()
+
+            val connectParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(margin, margin, margin, margin) }
+
+            val disconnectParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(margin, 0, margin, margin) }
+
+            val connectButton = Button(context).apply {
+                text = "Kết nối VPN"
+                setOnClickListener { prepareVpn() }
+                layoutParams = connectParams
+            }
+
+            val disconnectButton = Button(context).apply {
+                text = "Ngắt kết nối VPN"
+                setOnClickListener {
+                    val stopIntent = Intent(context, MyVpnService::class.java)
+                    stopService(stopIntent)
+                }
+                layoutParams = disconnectParams
+            }
+
+            val testButton = Button(context).apply {
+                text = "Test socks5"
+                setOnClickListener {
+                    Socks5Diagnostic.runTest("127.0.0.1", 1080)
+                }
+                layoutParams = disconnectParams
+            }
+
+            addView(connectButton)
+            addView(disconnectButton)
+            addView(testButton)
         }
-        setContentView(button)
+
+        setContentView(layout)
     }
 
     private fun prepareVpn() {
