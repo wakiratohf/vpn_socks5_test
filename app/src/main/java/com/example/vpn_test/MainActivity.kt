@@ -2,12 +2,17 @@ package com.example.vpn_test
 
 import android.app.Activity
 import android.content.Intent
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
 import android.net.VpnService
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.delay
+import java.io.FileDescriptor
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
     companion object {

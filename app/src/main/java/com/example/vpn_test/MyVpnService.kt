@@ -6,14 +6,18 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
-// Import package từ Go (gomobile tự viết hoa chữ cái đầu)
+import kotlinx.coroutines.delay
 import mysingboxlib.Mysingboxlib
 import mysingboxlib.TunnelHandle
+import java.io.FileDescriptor
+import java.io.IOException
 
 class MyVpnService : VpnService() {
 
@@ -50,7 +54,7 @@ class MyVpnService : VpnService() {
         // --- PHẦN 1: Cấu hình Android Interface (TUN) ---
         val builder = Builder()
             .setSession("MyVPN")
-            .setMtu(1500)                     // Theo profile của bạn
+            .setMtu(1280)                     // Theo profile của bạn
             .addAddress("10.0.0.2", 32)       // Local Address của bạn
             .addDnsServer("8.8.8.8")          // DNS Google (hoặc dùng 1.1.1.1)
             .addRoute("0.0.0.0", 0)           // Route toàn bộ traffic qua VPN
@@ -76,7 +80,7 @@ class MyVpnService : VpnService() {
         val config = """
         private_key=$privateKeyHex
         public_key=$publicKeyHex
-        endpoint=172.104.55.236:51820
+        endpoint=127.0.0.1:51820
         allowed_ip=0.0.0.0/0
         persistent_keepalive_interval=25
     """.trimIndent().trim()
@@ -137,6 +141,22 @@ class MyVpnService : VpnService() {
             .setSmallIcon(android.R.drawable.ic_dialog_info) // Thay icon của bạn
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Ngắt kết nối", stopPendingIntent)
             .build()
+    }
+
+    private suspend fun sendFd(fd: FileDescriptor, sockPath: String) {
+        var tries = 0
+        while (true) try {
+            delay(50L shl tries)
+            LocalSocket().use { localSocket ->
+                localSocket.connect(LocalSocketAddress(sockPath, LocalSocketAddress.Namespace.FILESYSTEM))
+                localSocket.setFileDescriptorsForSend(arrayOf(fd))
+                localSocket.outputStream.write(42)
+            }
+            return
+        } catch (e: IOException) {
+            if (tries > 5) throw e
+            tries += 1
+        }
     }
 
     override fun onDestroy() {
